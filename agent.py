@@ -60,6 +60,10 @@ class GameBoard:
 		self.name ="Daz Ruler"
 		self.a_list = [Domino("6","6")]
 		self.b_list = [Domino("6","6")]
+		self.player_names = []
+		self.player_tiles = [7,7,7,7]
+		self.current_player = 1
+
 
 
 	#Append tile to one side of the board
@@ -101,6 +105,44 @@ class GameBoard:
 
 	def get_edgeB(self):
 		return b_list[-1].side_B
+
+	#Circle between players
+	#Get current player name
+
+	def	get_current_player(self):
+		index =	self.current_player
+		return self.player_names.index(index)
+
+	def add_player(self,name):
+		self.player_names.append(name)
+
+	def erase_players(self,name):
+		self.player_names = []	
+	
+	def next_player(self):
+
+		if self.current_player == 4:
+			self.current_player = 1
+		else:
+			self.current_player = self.current_player + 1
+
+
+	def set_starting_player(self, name):
+		index = self.player_names.index(name)
+		self.current_player = index
+
+
+	def player_number_tiles(self,name):
+		index = self.player_names.index(name)
+		return self.player_tiles[index]
+
+
+	def update_player_number_tiles(self):
+		self.player_tiles[self.current_player] = self.player_tiles[self.current_player] - 1
+
+
+	
+
 
 
 #Domino Player/Agent
