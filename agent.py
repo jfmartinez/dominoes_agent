@@ -61,10 +61,10 @@ class Domino:
 	def hasBothSide(self, sideA, sideB):
 		if self.side_A == sideA:
 			if self.side_B == sideB:
-			return True
+				return True
 		elif self.side_A == sideB:
 			if self.side_B == sideA:
-			return True
+				return True
 		else:
 			return False		
 
@@ -222,30 +222,31 @@ class GameBoard:
 		cp = self.get_current_player()
 		da = self.domino_agent_index()
 
-		if da == 1:
-			if cp == 4:
+		if da == 0:
+			if cp == 3:
 				self.player_who_pass = "L"
-			elif cp == (da+1):
+			elif cp == 1:
 				self.player_who_pass = "R"
 			else:
 				self.player_who_pass = "P"
-		elif da == 4:
-			if cp == 1:
+		elif da == 3:
+			print("Domino Agent")
+			if cp == 0:
 				self.player_who_pass = "R"
-			elif cp == (da-1):
+			elif cp == 1:
 				self.player_who_pass = "R"
 			else:
 				self.player_who_pass = "P"
 
-		elif da == 2:
-			if cp == 1:
+		elif da == 1:
+			if cp == 0:
 				self.player_who_pass = "L"
-			elif cp == 3:
+			elif cp == 2:
 				self.player_who_pass = "R"
 			else:
 				self.player_who_pass = "P"	
 
-		elif da == 3:
+		elif da == 2:
 			if cp == 4:
 				self.player_who_pass = "R"
 			elif cp == 2:
@@ -288,83 +289,83 @@ class DominoAgent:
 	#For initial AI testing purposes, this makes the agent do a random move
 	def random_move(self):
 		#When someone passed try to block after trying to block reset the player passed
-		if self.gameboard.player_who_pass != "":
-			turn_pass = False
+		# if self.gameboard.player_who_pass != "":
+		# 	turn_pass = False
+		# 	print("Carlitos says: Somebody Passed!")
+		# 	if self.gameboard.player_who_pass == "L":
+		# 		left_edge = self.gameboard.get_edgeA()
+		# 		right_edge = self.gameboard.get_edgeB()
+		# 		viable_tile_left = self.getTilesWithBothSide(left_edge,left_edge)
+		# 		viable_tile_right = self.getTilesWithBothSide(right_edge,right_edge)
 
-			if self.gameboard.player_who_pass == "L":
-				left_edge = self.gameboard.get_edgeA()
-				right_edge = self.gameboard.get_edgeB()
-				viable_tile_left = self.getTilesWithBothSide(left_edge,left_edge)
-				viable_tile_right = self.getTilesWithBothSide(right_edge,right_edge)
+		# 		if len(viable_tile_left) != 0:
+		# 			self.gameboard.place_tile(viable_tile_left, "LEFT")
+		# 			self.gameboard.player_who_pass = ""
 
-				if len(viable_tile_left) != 0:
-				self.gameboard.place_tile(viable_tile_left, "LEFT")
-				self.gameboard.player_who_pass = ""
+		# 		elif len(viable_tile_right) != 0:
+		# 			self.gameboard.place_tile(viable_tile_left, "RIGHT")
+		# 			self.gameboard.player_who_pass = ""
 
-				elif len(viable_tile_right) != 0:
-				self.gameboard.place_tile(viable_tile_left, "RIGHT")
-				self.gameboard.player_who_pass = ""
-
-				else:
-					#print("PASS")
-					turn_pass = True
-					self.gameboard.player_who_pass = ""
+		# 		else:
+		# 			#print("PASS")
+		# 			turn_pass = True
+		# 			self.gameboard.player_who_pass = ""
 				
+		# 	else:
+		# 		turn_pass = True
+
+
+		# else:
+		choice = random.randint(0,1)
+		turn_pass = False
+		if choice == 0: #Aim for the left side
+			left_edge = self.gameboard.get_edgeA()
+			viable_tiles = self.getTilesWithSide(left_edge)
+			if len(viable_tiles) != 0:
+				turn_pass = False
+				highest_tile = self.getHighestValue(viable_tiles)
+				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
+			else:
+				print("PASS")
+				turn_pass = True
+ 
+		if choice == 0 and turn_pass: #Aim for the right side
+			right_edge = self.gameboard.get_edgeB()
+			viable_tiles = self.getTilesWithSide(right_edge)
+			if len(viable_tiles) != 0:
+				turn_pass = False
+				highest_tile = self.getHighestValue(viable_tiles)
+
+				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
 			else:
 				turn_pass = True
 
+		if choice == 1:
+			right_edge = self.gameboard.get_edgeB()
+			viable_tiles = self.getTilesWithSide(right_edge)
+			if len(viable_tiles) != 0:
+				turn_pass = False
+				highest_tile = self.getHighestValue(viable_tiles)
 
+				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
+			else:
+				turn_pass = True
+
+		if choice == 1 and turn_pass: #Aim for the right side
+			left_edge = self.gameboard.get_edgeA()
+			viable_tiles = self.getTilesWithSide(left_edge)
+			if len(viable_tiles) != 0:
+				turn_pass = False
+				highest_tile = self.getHighestValue(viable_tiles)
+
+				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
+			else:
+				print("PASS")
+				turn_pass = True
 		if turn_pass:
-			choice = random.randint(0,1)
-			turn_pass = False
-			if choice == 0: #Aim for the left side
-				left_edge = self.gameboard.get_edgeA()
-				viable_tiles = self.getTilesWithSide(left_edge)
-				if len(viable_tiles) != 0:
-					turn_pass = False
-					highest_tile = self.getHighestValue(viable_tiles)
-					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
-				else:
-					print("PASS")
-					turn_pass = True
-	 
-			if choice == 0 and turn_pass: #Aim for the right side
-				right_edge = self.gameboard.get_edgeB()
-				viable_tiles = self.getTilesWithSide(right_edge)
-				if len(viable_tiles) != 0:
-					turn_pass = False
-					highest_tile = self.getHighestValue(viable_tiles)
-
-					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
-				else:
-					turn_pass = True
-
-			if choice == 1:
-				right_edge = self.gameboard.get_edgeB()
-				viable_tiles = self.getTilesWithSide(right_edge)
-				if len(viable_tiles) != 0:
-					turn_pass = False
-					highest_tile = self.getHighestValue(viable_tiles)
-
-					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
-				else:
-					turn_pass = True
-
-			if choice == 1 and turn_pass: #Aim for the right side
-				left_edge = self.gameboard.get_edgeA()
-				viable_tiles = self.getTilesWithSide(left_edge)
-				if len(viable_tiles) != 0:
-					turn_pass = False
-					highest_tile = self.getHighestValue(viable_tiles)
-
-					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
-				else:
-					print("PASS")
-					turn_pass = True
-			if turn_pass:
-				self.gameboard.set_player_pass()
-			elif not turn_pass:
-				self.domino_hand.pop(self.domino_hand.index(highest_tile))
+			self.gameboard.set_player_pass()
+		elif not turn_pass:
+			self.domino_hand.pop(self.domino_hand.index(highest_tile))
 				
 	#Viable tiles that can be played in an edge
 	def getTilesWithSide(self, side):
@@ -439,80 +440,78 @@ def print_hand(hand):
 	print(hand_string)
 	
 #Domino Game Start
-def game_start():
 	
-	#Create Game Board instance
-	gameboard = GameBoard()
+#Create Game Board instance
+gameboard = GameBoard()
 
-	#Initialize Agent
-	our_player = DominoAgent(gameboard)
+#Initialize Agent
+our_player = DominoAgent(gameboard)
 
-	#Shuffle dominos
-	domino_shuffler = DominoGenerator()
+#Shuffle dominos
+domino_shuffler = DominoGenerator()
+for h in range(0, 3):
+	player_name = input("Player #"+ str(h) + " name: ")
+	gameboard.add_player(player_name)
 
-	gameboard.add_player("Jose")
-	gameboard.add_player("Raul")
-	gameboard.add_player("Oscar")
 
-	gameboard.add_player(our_player.name)
-	
+gameboard.add_player(our_player.name)
 
-	#Randomized process for testing
-	hands = []
-	hands.append(domino_shuffler.getRandomHand())
-	hands.append(domino_shuffler.getRandomHand())
-	hands.append(domino_shuffler.getRandomHand())
-	hands.append(domino_shuffler.getRandomHand())
-	for k in hands:
-		print_hand(k)
-	# our_player.establish_hand(hands[3])
-	agent_hand = []
-	for k in range(0,7):
-		domino_text = input("Enter Domino #" + str(k) + ": ")
-		if domino_text == "6|6":
-			set_first_player = "Carlitos"
-		else:
-			agent_hand.append(Domino(domino_text[0], domino_text[2]))
 
-	for i in agent_hand:
-		print(str(i))
-	#Establishes our agent's hand
-	our_player.establish_hand(agent_hand)
-	print(gameboard.player_names)
-	
-	set_first_player = input("Who Play's First? ")
+#Randomized process for testing
+hands = []
+hands.append(domino_shuffler.getRandomHand())
+hands.append(domino_shuffler.getRandomHand())
+hands.append(domino_shuffler.getRandomHand())
+hands.append(domino_shuffler.getRandomHand())
+for k in hands:
+	print_hand(k)
+# our_player.establish_hand(hands[3])
+agent_hand = []
+for k in range(0,7):
+	domino_text = input("Enter Domino #" + str(k) + ": ")
+	if domino_text == "6|6":
+		set_first_player = "Carlitos"
+	else:
+		agent_hand.append(Domino(domino_text[0], domino_text[2]))
 
-	gameboard.set_starting_player(set_first_player)
-	gameboard.next_player()
+for i in agent_hand:
+	print(str(i))
+#Establishes our agent's hand
+our_player.establish_hand(agent_hand)
+print(gameboard.player_names)
 
-	#Game loop
-	while not gameboard.finished:
-		#Print who's turn is it
-		print(gameboard.get_current_player() + "'s Turn")
-		#Show game state
-		print("LEFT: " + gameboard.get_sideA())
-		print("RIGHT: " + gameboard.get_sideB())
+set_first_player = input("Who Play's First? ")
 
-		#Carlitos makes a move
-		if gameboard.get_current_player() == our_player.name:
-			print("Carlitos makes a move")
-			our_player.random_move()
-		else:
+gameboard.set_starting_player(set_first_player)
+gameboard.next_player()
 
-			move = input("Input a move: ")
-			#player can pass
-			if move == "PASS":
-				gameboard.set_player_pass()
-
-			else:
-				#Example of a move 3|2 LEFT
-				verify = re.match("[0-6]\|[0-6] ((LEFT)|(RIGHT))", move)
-				if verify:
-					gameboard.place_tile(Domino(move[0], move[2]), move[4:])
-				else:
-					print("INVALID MOVE")
+#Game loop
+while not gameboard.finished:
 	#Print who's turn is it
 	print(gameboard.get_current_player() + "'s Turn")
 	#Show game state
 	print("LEFT: " + gameboard.get_sideA())
 	print("RIGHT: " + gameboard.get_sideB())
+
+	#Carlitos makes a move
+	if gameboard.get_current_player() == our_player.name:
+		print("Carlitos makes a move")
+		our_player.random_move()
+	else:
+
+		move = input("Input a move: ")
+		#player can pass
+		if move == "PASS":
+			gameboard.set_player_pass()
+
+		else:
+			#Example of a move 3|2 LEFT
+			verify = re.match("[0-6]\|[0-6] ((LEFT)|(RIGHT))", move)
+			if verify:
+				gameboard.place_tile(Domino(move[0], move[2]), move[4:])
+			else:
+				print("INVALID MOVE")
+#Print who's turn is it
+#Show game state
+print("LEFT: " + gameboard.get_sideA())
+print("RIGHT: " + gameboard.get_sideB())
