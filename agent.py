@@ -66,6 +66,12 @@ class GameBoard:
 		self.player_names = []
 		self.player_tiles = [7,7,7,7]
 		self.current_player = 1
+		#self.player_points_on_board = [0,0,0,0]
+		self.player_pass_values = []
+		self.lead_player = 0
+		self.winning_player = 0
+		self.player_who_pass = ""
+		self.domino_agent = 0
 
 
 
@@ -79,9 +85,14 @@ class GameBoard:
 			print(response)
 			if response == "BA":
 				self.a_list.append(tile)
+				#Move to next player
+				next_player()
+
 			elif response == "BB":
 				tile.flip()
 				self.a_list.append(tile)
+				#Move to next player
+				next_player()
 
 		#Choose to place the tile on the other side
 		elif side == "RIGHT":
@@ -89,9 +100,14 @@ class GameBoard:
 			response = edge_tile.match_sideB(tile)
 			if response == "BA":
 				self.b_list.append(tile)
+				#Move to next player
+				next_player()
+
 			elif response == "BB":
 				tile.flip()
 				self.b_list.append(tile)
+				#Move to next player
+				next_player()
 
 	def get_sideA(self):
 		listA = ""
@@ -109,22 +125,22 @@ class GameBoard:
 	def get_edgeB(self):
 		return b_list[-1].side_B
 
-	#Circle between players
+	#Players
 	#Get current player name
-
 	def	get_current_player(self):
 		index =	self.current_player
 		return self.player_names.index(index)
 
-	#Add a player to the game	
+
+	#Add player
 	def add_player(self,name):
 		self.player_names.append(name)
 
-	#Erase all player instances from the game
+	#Erase all players
 	def erase_players(self,name):
 		self.player_names = []	
 	
-	#Next players turn
+	#Move Current Player Index to next index
 	def next_player(self):
 
 		if self.current_player == 4:
@@ -132,20 +148,89 @@ class GameBoard:
 		else:
 			self.current_player = self.current_player + 1
 
-
+	#Set the player who will start
 	def set_starting_player(self, name):
 		index = self.player_names.index(name)
 		self.current_player = index
 
 
+	#Get how many tiles has a player
 	def player_number_tiles(self,name):
 		index = self.player_names.index(name)
 		return self.player_tiles[index]
 
-
+	#Update the number of tiles of a player (# -1)
 	def update_player_number_tiles(self):
 		self.player_tiles[self.current_player] = self.player_tiles[self.current_player] - 1
 
+	#Save player points of tiles on board
+	#def save_player_tiles_value(self,value):
+	#	self.player_points_on_board[self.current_player] = self.player_points_on_board[self.current_player] + value
+
+	#Calculate lead player by how many tiles he has left
+	def calculate_lead_player(self):	
+		self.lead_player = player_tiles.index(min(player_tiles))
+		
+	#Set the winning player of the overall tournament 
+	def set_winning_player(self,value):	
+		self.winning_player = value
+
+	#Save the edge values when a player said pass.
+	def set_player_pass(self):	
+
+		edgeA = get_edgeA
+		edgeB = get_edgeB
+
+		if edgeA not in player_pass_values:
+		self.player_pass_values.append(get_edgeA())
+
+		if edgeB not in player_pass_values:
+		self.player_pass_values.append(get_edgeB())
+
+		cp = get_current_player()
+		da = domino_agent_index()
+
+		if da == 1:
+			if cp == 4:
+				self.player_who_pass = "L"
+			elif cp == (da+1):
+				self.player_who_pass = "R"
+			else:
+				self.player_who_pass = "P"
+		elif da == 4:
+			if cp == 1:
+				self.player_who_pass = "R"
+			elif cp == (da-1):
+				self.player_who_pass = "R"
+			else:
+				self.player_who_pass = "P"
+
+		elif da == 2:
+			if cp == 1:
+				self.player_who_pass = "L"
+			elif cp == 3:
+				self.player_who_pass = "R"
+			else:
+				self.player_who_pass = "P"	
+
+		elif da == 3:
+			if cp == 4:
+				self.player_who_pass = "R"
+			elif cp == 2:
+				self.player_who_pass = "L"
+			else:
+				self.player_who_pass = "P"				
+
+
+	#Save the edge values when a player said pass.
+	def get_player_pass(self):	
+		return	self.player_who_pass		
+
+
+	#Get domino agent turn
+	def domino_agent_index(self):
+		index = self.player_names.index("Agent")
+		self.domino_agent = index
 
 	
 #Domino Player/Agent
@@ -232,11 +317,4 @@ class DominoGenerator:
 			player_hand.append(self.dominoes.pop(choice))
 		return player_hand
 
-
-def main():
-
-	generator = DominoGenerator()
-	hand = generator.getRandomHand()
-	for k in l:
-		print(hand)
 
