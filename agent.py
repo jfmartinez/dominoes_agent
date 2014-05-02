@@ -125,6 +125,7 @@ class GameBoard:
 		for i in range(0, 4):
 			if self.player_tiles[i] == 0:
 				self.finished = True
+				print(self.player_names[i])
 
 
 
@@ -408,10 +409,21 @@ def game_start():
 	hands.append(domino_shuffler.getRandomHand())
 	hands.append(domino_shuffler.getRandomHand())
 	hands.append(domino_shuffler.getRandomHand())
-	our_player.establish_hand(hands[3])
+	for k in hands:
+		print_hand(k)
+	# our_player.establish_hand(hands[3])
+	agent_hand = []
+	for k in range(0,7):
+		domino_text = input("Enter Domino #" + str(k) + ": ")
+		if domino_text == "6|6":
+			set_first_player = "Carlitos"
+		else:
+			agent_hand.append(Domino(domino_text[0], domino_text[2]))
 
-	for i in hands:
-		print_hand(i)
+	for i in agent_hand:
+		print(str(i))
+	#Establishes our agent's hand
+	our_player.establish_hand(agent_hand)
 	print(gameboard.player_names)
 	
 	set_first_player = input("Who Play's First? ")
@@ -445,3 +457,8 @@ def game_start():
 					gameboard.place_tile(Domino(move[0], move[2]), move[4:])
 				else:
 					print("INVALID MOVE")
+	#Print who's turn is it
+	print(gameboard.get_current_player() + "'s Turn")
+	#Show game state
+	print("LEFT: " + gameboard.get_sideA())
+	print("RIGHT: " + gameboard.get_sideB())
