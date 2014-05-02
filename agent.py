@@ -1,5 +1,5 @@
 #Authors: Jose F. Martinez Rivera, Adam Cancel
-
+import random
 #Domino Class represents a domino object
 class Domino:
 	
@@ -9,7 +9,10 @@ class Domino:
 		self.side_B = side_B #Other side of the tile
 
 	#Print to the domino tile
-	def getTileString(self):
+	def __str__(self):
+		return "("+self.side_A + "|" + self.side_B + ")"
+
+	def __rpr__(self):
 		return "("+self.side_A + "|" + self.side_B + ")"
 
 	#Returns the value of the tile
@@ -113,12 +116,15 @@ class GameBoard:
 		index =	self.current_player
 		return self.player_names.index(index)
 
+	#Add a player to the game	
 	def add_player(self,name):
 		self.player_names.append(name)
 
+	#Erase all player instances from the game
 	def erase_players(self,name):
 		self.player_names = []	
 	
+	#Next players turn
 	def next_player(self):
 
 		if self.current_player == 4:
@@ -142,9 +148,6 @@ class GameBoard:
 
 
 	
-
-
-
 #Domino Player/Agent
 class DominoAgent:
 
@@ -152,14 +155,14 @@ class DominoAgent:
 		self.name = "Fernando 2.0"
 
 	#Receive Hand
-	def establish_hand(self,d1, d2, d3, d4, d5, d6,d7):
-		self.domino_hand = [d1,d2,d3,d4,d5,d6,d7]
+	def establish_hand(self,hand):
+		self.domino_hand = hand
 
 	#Representation of a Hand
 	def get_hand(self):
 		hand_string = ""
 		for i in self.domino_hand:
-			hand_string += i.getTileString() + ","
+			hand_string += str(i) + ","
 		return hand_string
 
 	#For initial AI testing purposes, this makes the agent do a random move
@@ -172,6 +175,7 @@ class DominoAgent:
 				gameboard.place_tile(getHighestValue(viable_tiles), "LEFT")
 			else:
 				print("PASS")
+
 		else: #Aim for the right side
 			right_edge = gameboard.get_sideA()
 			viable_tiles = getTilesWithSide(right_edge)
@@ -197,14 +201,42 @@ class DominoAgent:
 				value = i.get_value
 		return highest_tile #Return the highest tile
 
-
-#Class for generating dominos
+#Domino Generator
 class DominoGenerator:
+
 	def __init__(self):
-		generateDominos()
+		self.tile_combinations = []
+		self.dominoes = []		
+	
+	def generatorDominoes():
+		#Generate domino tiles
+		self.tile_combinations = []
+		for f in range(0,7):
+			for k in range(0,7):
+				check = True #Check for previous tuples
+				#Check if there's a previous domino made
+				for tuple in self.tile_combinations:
+					if sorted(tuple) == sorted((f,k)): #This makes (5,6) == (6,5)
+						check = False
+				#If check is true no previous domino was found		
+				if check:
+					self.tile_combinations.append((f,k))
+		self.dominoes = []
+		for tile_comb in self.tile_combinations:
+			self.dominoes.append(Domino(str(tile_comb[0]), str(tile_comb[1])))
+	
+	def getRandomHand(self):
+		player_hand = []
+		for i in range(0,7):
+			choice = random.randint(0, len(self.dominoes))
+			player_hand.append(self.dominoes.pop(choice))
+		return player_hand
 
-	def generateDominos(self):
-		for i 
 
+def main():
 
+	generator = DominoGenerator()
+	hand = generator.getRandomHand()
+	for k in l:
+		print(hand)
 
