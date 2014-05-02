@@ -58,6 +58,16 @@ class Domino:
 		else:
 			return False
 
+	def hasBothSide(self, sideA, sideB):
+		if self.side_A == sideA:
+			if self.side_B == sideB:
+			return True
+		elif self.side_A == sideB:
+			if self.side_B == sideA:
+			return True
+		else:
+			return False		
+
 
 #Game Board
 class GameBoard:
@@ -277,56 +287,84 @@ class DominoAgent:
 
 	#For initial AI testing purposes, this makes the agent do a random move
 	def random_move(self):
-		choice = random.randint(0,1)
-		turn_pass = False
-		if choice == 0: #Aim for the left side
-			left_edge = self.gameboard.get_edgeA()
-			viable_tiles = self.getTilesWithSide(left_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
-			else:
-				print("PASS")
-				turn_pass = True
- 
-		if choice == 0 and turn_pass: #Aim for the right side
-			right_edge = self.gameboard.get_edgeB()
-			viable_tiles = self.getTilesWithSide(right_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
+		#When someone passed try to block after trying to block reset the player passed
+		if self.gameboard.player_who_pass != "":
+			turn_pass = False
 
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
-			else:
-				turn_pass = True
+			if self.gameboard.player_who_pass == "L":
+				left_edge = self.gameboard.get_edgeA()
+				right_edge = self.gameboard.get_edgeB()
+				viable_tile_left = self.getTilesWithBothSide(left_edge,left_edge)
+				viable_tile_right = self.getTilesWithBothSide(right_edge,right_edge)
 
-		if choice == 1:
-			right_edge = self.gameboard.get_edgeB()
-			viable_tiles = self.getTilesWithSide(right_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
+				if len(viable_tile_left) != 0:
+				self.gameboard.place_tile(viable_tile_left, "LEFT")
+				self.gameboard.player_who_pass = ""
 
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
+				elif len(viable_tile_right) != 0:
+				self.gameboard.place_tile(viable_tile_left, "RIGHT")
+				self.gameboard.player_who_pass = ""
+
+				else:
+					#print("PASS")
+					turn_pass = True
+					self.gameboard.player_who_pass = ""
+				
 			else:
 				turn_pass = True
 
-		if choice == 1 and turn_pass: #Aim for the right side
-			left_edge = self.gameboard.get_edgeA()
-			viable_tiles = self.getTilesWithSide(left_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
 
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
-			else:
-				print("PASS")
-				turn_pass = True
 		if turn_pass:
-			self.gameboard.set_player_pass()
-		elif not turn_pass:
-			self.domino_hand.pop(self.domino_hand.index(highest_tile))
+			choice = random.randint(0,1)
+			turn_pass = False
+			if choice == 0: #Aim for the left side
+				left_edge = self.gameboard.get_edgeA()
+				viable_tiles = self.getTilesWithSide(left_edge)
+				if len(viable_tiles) != 0:
+					turn_pass = False
+					highest_tile = self.getHighestValue(viable_tiles)
+					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
+				else:
+					print("PASS")
+					turn_pass = True
+	 
+			if choice == 0 and turn_pass: #Aim for the right side
+				right_edge = self.gameboard.get_edgeB()
+				viable_tiles = self.getTilesWithSide(right_edge)
+				if len(viable_tiles) != 0:
+					turn_pass = False
+					highest_tile = self.getHighestValue(viable_tiles)
+
+					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
+				else:
+					turn_pass = True
+
+			if choice == 1:
+				right_edge = self.gameboard.get_edgeB()
+				viable_tiles = self.getTilesWithSide(right_edge)
+				if len(viable_tiles) != 0:
+					turn_pass = False
+					highest_tile = self.getHighestValue(viable_tiles)
+
+					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
+				else:
+					turn_pass = True
+
+			if choice == 1 and turn_pass: #Aim for the right side
+				left_edge = self.gameboard.get_edgeA()
+				viable_tiles = self.getTilesWithSide(left_edge)
+				if len(viable_tiles) != 0:
+					turn_pass = False
+					highest_tile = self.getHighestValue(viable_tiles)
+
+					self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
+				else:
+					print("PASS")
+					turn_pass = True
+			if turn_pass:
+				self.gameboard.set_player_pass()
+			elif not turn_pass:
+				self.domino_hand.pop(self.domino_hand.index(highest_tile))
 				
 	#Viable tiles that can be played in an edge
 	def getTilesWithSide(self, side):
@@ -335,6 +373,22 @@ class DominoAgent:
 			if i.hasSide(side):
 				viable_tiles.append(i)
 		return viable_tiles
+
+	#Viable tiles that can be played in an edge that have both sides desired
+	def getTilesWithBothSide(self, sideA, sideB):
+		viable_tiles = []
+		for i in self.domino_hand:
+			if i.hasBothSide(sideA, sideB):
+				viable_tiles.append(i)
+		return viable_tiles	
+
+	#Viable tiles that can be played in an edge but will make a player pass
+	def getTilesWithSide(self, side):
+		viable_tiles = []
+		for i in self.domino_hand:
+			if i.hasSide(side):
+				viable_tiles.append(i)
+		return viable_tiles	
 
 	#The highest possible tile
 	def getHighestValue(self, tiles):
