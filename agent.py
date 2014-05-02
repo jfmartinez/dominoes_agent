@@ -63,9 +63,12 @@ class GameBoard:
 		self.player_names = []
 		self.player_tiles = [7,7,7,7]
 		self.current_player = 1
-		self.player_points_on_board = [0,0,0,0]
+		#self.player_points_on_board = [0,0,0,0]
+		self.player_pass_values = []
 		self.lead_player = 0
 		self.winning_player = 0
+		self.player_who_pass = ""
+		self.domino_agent = 0
 
 
 
@@ -79,12 +82,14 @@ class GameBoard:
 			print(response)
 			if response == "BA":
 				self.a_list.append(tile)
-				save_player_tiles_value(tile.get_value())
+				#Move to next player
+				next_player()
 
 			elif response == "BB":
 				tile.flip()
 				self.a_list.append(tile)
-				save_player_tiles_value(tile.get_value())
+				#Move to next player
+				next_player()
 
 		#Choose to place the tile on the other side
 		elif side == "RIGHT":
@@ -92,12 +97,14 @@ class GameBoard:
 			response = edge_tile.match_sideB(tile)
 			if response == "BA":
 				self.b_list.append(tile)
-				save_player_tiles_value(tile.get_value())
+				#Move to next player
+				next_player()
 
 			elif response == "BB":
 				tile.flip()
 				self.b_list.append(tile)
-				save_player_tiles_value(tile.get_value())
+				#Move to next player
+				next_player()
 
 	def get_sideA(self):
 		listA = ""
@@ -164,6 +171,62 @@ class GameBoard:
 	def set_winning_player(self,value):	
 		self.winning_player = value
 
+	#Save the edge values when a player said pass.
+	def set_player_pass(self):	
+
+		edgeA = get_edgeA
+		edgeB = get_edgeB
+
+		if edgeA not in player_pass_values:
+		self.player_pass_values.append(get_edgeA())
+
+		if edgeB not in player_pass_values:
+		self.player_pass_values.append(get_edgeB())
+
+		cp = get_current_player()
+		da = domino_agent_index()
+
+		if da == 1:
+			if cp == 4:
+				self.player_who_pass = "L"
+			elif cp == (da+1):
+				self.player_who_pass = "R"
+			else:
+				self.player_who_pass = "P"
+		elif da == 4:
+			if cp == 1:
+				self.player_who_pass = "R"
+			elif cp == (da-1):
+				self.player_who_pass = "R"
+			else:
+				self.player_who_pass = "P"
+
+		elif da == 2:
+			if cp == 1:
+				self.player_who_pass = "L"
+			elif cp == 3:
+				self.player_who_pass = "R"
+			else:
+				self.player_who_pass = "P"	
+
+		elif da == 3:
+			if cp == 4:
+				self.player_who_pass = "R"
+			elif cp == 2:
+				self.player_who_pass = "L"
+			else:
+				self.player_who_pass = "P"				
+
+
+	#Save the edge values when a player said pass.
+	def get_player_pass(self):	
+		return	self.player_who_pass		
+
+
+	#Get domino agent turn
+	def domino_agent_index(self):
+		index = self.player_names.index("Agent")
+		self.domino_agent = index
 
 	
 
