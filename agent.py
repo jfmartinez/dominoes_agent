@@ -1,6 +1,113 @@
 #Authors: Jose F. Martinez Rivera, Adam Cancel
 import random
 import re
+import copy
+
+
+game_type = "Random"
+
+#______________________________________________________________________________
+# Minimax Search
+
+def minimax_decision(state, game):
+	"""Given a state in a game, calculate the best move by searching
+	forward all the way to the terminal states. [Fig. 5.3]"""
+
+	def agent_value(state):
+		v = -100
+		for a in game.ai_actions(state):
+			v = max(v, p1_value(game.result(state, a)))
+		return v
+
+	def p1_value(state):
+		v = 100
+		for a in game.actions(state):
+			v = min(v, p2_value(game.result(state, a)))
+		return v
+
+	def p2_value(state):
+		v = -100
+		for a in game.actions(state):
+			v = max(v, p3_value(game.result(state, a)))
+		return v
+
+	def p3_value(state):
+		v = 100
+		for a in game.actions(state):
+			v = min(v, agent_turn(game.result(state, a)))
+		return v
+
+	def agent_turn(state):
+		return game.diversity(state)
+
+	# Body of minimax_decision:
+	return agent_value(state)
+
+
+class DominoGame:
+	def __init__(self):
+		#dSomething
+		self.dominoes = []
+
+	def generateDominoes(self):
+		#Generate domino tiles
+		for f in range(0,7):
+			for k in range(0,7):
+				check = True #Check for previous tuples
+				#Check if there's a previous domino made
+				for tuple in self.tile_combinations:
+					if sorted(tuple) == sorted((f,k)): #This makes (5,6) == (6,5)
+						check = False
+				#If check is true no previous domino was found		
+				if check:
+					self.tile_combinations.append((f,k))
+		self.dominoes = []
+		for tile_comb in self.tile_combinations:
+			self.dominoes.append(Domino(str(tile_comb[0]), str(tile_comb[1])))
+
+	def actions(self, state):
+		actions = []
+		left_side = state.get_edgeA()
+		right_side = state.get_edgeB()
+
+		for domino in self.dominoes:
+			if domino in state.dominoes_played or domino in state.agent_hand:
+				continue
+			elif domino.hasSide(left_side) or domino.hasSide(right_side):
+				actions.append(domino)
+		return actions
+
+	def ai_actions(self, state):
+		actions = []
+		left_side = state.get_edgeA()
+		right_side = state.get_edgeB()
+
+		for domino in state.agent_hand:
+			
+			if domino.hasSide(left_side) or domino.hasSide(right_side):
+				actions.append(domino)
+		return actions
+
+	def result(self, state, action):
+
+		state.dominoes_played.append(action)
+		choice = random.randint(0,1)
+		if choice == 0 and action.hasSide(state.get_edgeA):
+			state.add_domino_action(action, "LEFT")
+		elif choice == 1 and action.hasSide(state.get_edgeB):
+			state.add_domino_action(action, "RIGHT")
+		return state
+
+	def diversity(self, state):
+		dominos = [0,1,2,3,4,5,6]
+		domino_tiles = [0,0,0,0,0,0]
+		for domino in state.agent_hand:
+			domino_tiles[domino.side_A_Value] = domino_tiles[domino.side_A_Value] + 1
+			domino_tiles[domino.side_B_Value] = domino_tiles[domino.side_B_Value] + 1
+
+		return domino_tiles
+
+
 
 #Domino Class represents a domino object
 class Domino:
@@ -68,14 +175,17 @@ class Domino:
 		else:
 			return False		
 
-
+	def side_B_Value():
+		return int(self.side_B)
+	def side_A_Value():
+		return int(self.side_A)
 #Game Board
 class GameBoard:
 
 	def __init__(self):
 		self.name ="Daz Ruler"
-		self.a_list = [Domino("6","6")]
-		self.b_list = [Domino("6","6")]
+		self.a_list = []
+		self.b_list = []
 		self.player_names = []
 		self.player_tiles = [7,7,7,7]
 		self.current_player = 0
@@ -86,8 +196,16 @@ class GameBoard:
 		self.player_who_pass = ""
 		self.domino_agent = 0
 		self.finished = False
+		self.dominoes_played = []
 
 
+	def first_tile(self, tile):
+		self.a_list.append(tile)
+		self.b_list.append(tile)
+		self.dominoes_played.append(tile)
+
+	def add_agent(self, domino_hand):
+		self.agent_hand = domino_hand
 
 	#Append tile to one side of the board
 	#It's important to know that all tiles will be connected strictly through side B to side A
@@ -103,6 +221,7 @@ class GameBoard:
 				#Move to next player
 				self.update_player_number_tiles()
 				self.next_player()
+				self.dominoes_played.append(tile)
 
 
 			elif response == "BB":
@@ -112,6 +231,8 @@ class GameBoard:
 				self.update_player_number_tiles()
 
 				self.next_player()
+				self.dominoes_played.append(tile)
+
 
 		#Choose to place the tile on the other side
 		elif "RIGHT" in side:
@@ -123,6 +244,7 @@ class GameBoard:
 				self.update_player_number_tiles()
 				
 				self.next_player()
+				self.dominoes_played.append(tile)
 
 			elif response == "BB":
 				tile.flip()
@@ -131,6 +253,8 @@ class GameBoard:
 		
 				#Move to next player
 				self.next_player()
+				self.dominoes_played.append(tile)
+
 
 		for i in range(0, 4):
 			if self.player_tiles[i] == 0:
@@ -138,22 +262,25 @@ class GameBoard:
 				print(self.player_names[i])
 
 
-
+	#Prints out the left side of the board
 	def get_sideA(self):
 		listA = ""
 		for tile in self.a_list:
 			listA += str(tile)
 		return listA
 
+	#Returns a string representing the right side of the board
 	def get_sideB(self):
 		listB = ""
 		for tile in self.b_list:
 			listB += str(tile)
 		return listB
 
+	#Get the edge domino of the Left side
 	def get_edgeA(self):
 		return self.a_list[-1].side_B
 
+	#Get the edge domino at the right side
 	def get_edgeB(self):
 		return self.b_list[-1].side_B
 
@@ -209,51 +336,6 @@ class GameBoard:
 
 	#Save the edge values when a player said pass.
 	def set_player_pass(self):	
-
-		edgeA = self.get_edgeA
-		edgeB = self.get_edgeB
-
-		if edgeA not in self.player_pass_values:
-			self.player_pass_values.append(self.get_edgeA())
-
-		if edgeB not in self.player_pass_values:
-			self.player_pass_values.append(self.get_edgeB())
-
-		cp = self.get_current_player()
-		da = self.domino_agent_index()
-
-		if da == 0:
-			if cp == 3:
-				self.player_who_pass = "L"
-			elif cp == 1:
-				self.player_who_pass = "R"
-			else:
-				self.player_who_pass = "P"
-		elif da == 3:
-			print("Domino Agent")
-			if cp == 0:
-				self.player_who_pass = "R"
-			elif cp == 1:
-				self.player_who_pass = "R"
-			else:
-				self.player_who_pass = "P"
-
-		elif da == 1:
-			if cp == 0:
-				self.player_who_pass = "L"
-			elif cp == 2:
-				self.player_who_pass = "R"
-			else:
-				self.player_who_pass = "P"	
-
-		elif da == 2:
-			if cp == 4:
-				self.player_who_pass = "R"
-			elif cp == 2:
-				self.player_who_pass = "L"
-			else:
-				self.player_who_pass = "P"	
-
 		self.next_player()			
 
 
@@ -267,6 +349,52 @@ class GameBoard:
 		index = self.player_names.index("Carlitos")
 		self.domino_agent = index
 
+	def add_domino_action(self, tile, side):
+	#Choose to place the tile on one side
+		if "LEFT" in side:
+			edge_tile = self.a_list[-1]
+			response = edge_tile.match_sideB(tile)
+			print(response)
+			if response == "BA":
+				self.a_list.append(tile)
+				#Move to next player
+				self.update_player_number_tiles()
+				self.next_player()
+
+
+			elif response == "BB":
+				tile.flip()
+				self.a_list.append(tile)
+				#Move to next player
+				self.update_player_number_tiles()
+
+				self.next_player()
+
+		#Choose to place the tile on the other side
+		elif "RIGHT" in side:
+			edge_tile = self.b_list[-1]
+			response = edge_tile.match_sideB(tile)
+			if response == "BA":
+				self.b_list.append(tile)
+				#Move to next player
+				self.update_player_number_tiles()
+				
+				self.next_player()
+
+			elif response == "BB":
+				tile.flip()
+				self.b_list.append(tile)
+				self.update_player_number_tiles()
+		
+				#Move to next player
+				self.next_player()
+
+		#Game finished
+		for i in range(0, 4):
+			if self.player_tiles[i] == 0:
+				self.finished = True
+				print(self.player_names[i])
+
 	
 #Domino Player/Agent
 class DominoAgent:
@@ -274,10 +402,13 @@ class DominoAgent:
 	def __init__(self, gameboard):
 		self.name = "Carlitos"
 		self.gameboard = gameboard
+		self.game = DominoGame()
+
 
 	#Receive Hand
 	def establish_hand(self,hand):
 		self.domino_hand = hand
+		self.gameboard.add_agent(self.domino_hand)
 
 	#Representation of a Hand
 	def get_hand(self):
@@ -287,85 +418,9 @@ class DominoAgent:
 		return hand_string
 
 	#For initial AI testing purposes, this makes the agent do a random move
-	def random_move(self):
-		#When someone passed try to block after trying to block reset the player passed
-		# if self.gameboard.player_who_pass != "":
-		# 	turn_pass = False
-		# 	print("Carlitos says: Somebody Passed!")
-		# 	if self.gameboard.player_who_pass == "L":
-		# 		left_edge = self.gameboard.get_edgeA()
-		# 		right_edge = self.gameboard.get_edgeB()
-		# 		viable_tile_left = self.getTilesWithBothSide(left_edge,left_edge)
-		# 		viable_tile_right = self.getTilesWithBothSide(right_edge,right_edge)
-
-		# 		if len(viable_tile_left) != 0:
-		# 			self.gameboard.place_tile(viable_tile_left, "LEFT")
-		# 			self.gameboard.player_who_pass = ""
-
-		# 		elif len(viable_tile_right) != 0:
-		# 			self.gameboard.place_tile(viable_tile_left, "RIGHT")
-		# 			self.gameboard.player_who_pass = ""
-
-		# 		else:
-		# 			#print("PASS")
-		# 			turn_pass = True
-		# 			self.gameboard.player_who_pass = ""
-				
-		# 	else:
-		# 		turn_pass = True
-
-
-		# else:
-		choice = random.randint(0,1)
-		turn_pass = False
-		if choice == 0: #Aim for the left side
-			left_edge = self.gameboard.get_edgeA()
-			viable_tiles = self.getTilesWithSide(left_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
-			else:
-				print("PASS")
-				turn_pass = True
- 
-		if choice == 0 and turn_pass: #Aim for the right side
-			right_edge = self.gameboard.get_edgeB()
-			viable_tiles = self.getTilesWithSide(right_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
-
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
-			else:
-				turn_pass = True
-
-		if choice == 1:
-			right_edge = self.gameboard.get_edgeB()
-			viable_tiles = self.getTilesWithSide(right_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
-
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "RIGHT")
-			else:
-				turn_pass = True
-
-		if choice == 1 and turn_pass: #Aim for the right side
-			left_edge = self.gameboard.get_edgeA()
-			viable_tiles = self.getTilesWithSide(left_edge)
-			if len(viable_tiles) != 0:
-				turn_pass = False
-				highest_tile = self.getHighestValue(viable_tiles)
-
-				self.gameboard.place_tile(self.getHighestValue(viable_tiles), "LEFT")
-			else:
-				print("PASS")
-				turn_pass = True
-		if turn_pass:
-			self.gameboard.set_player_pass()
-		elif not turn_pass:
-			self.domino_hand.pop(self.domino_hand.index(highest_tile))
+	def ai_move(self):
+		print(minimax_decision(copy.deepcopy(self.gameboard), self.game))
+		
 				
 	#Viable tiles that can be played in an edge
 	def getTilesWithSide(self, side):
@@ -374,6 +429,16 @@ class DominoAgent:
 			if i.hasSide(side):
 				viable_tiles.append(i)
 		return viable_tiles
+
+	def diversity(self, state):
+		dominos = [0,1,2,3,4,5,6]
+		domino_tiles = [0,0,0,0,0,0]
+		for domino in self.dominoes_hand:
+			domino_tiles[domino.side_A_Value] = domino_tiles[domino.side_A_Value] + 1
+			domino_tiles[domino.side_B_Value] = domino_tiles[domino.side_B_Value] + 1
+
+		return domino_tiles
+
 
 	#Viable tiles that can be played in an edge that have both sides desired
 	def getTilesWithBothSide(self, sideA, sideB):
@@ -401,6 +466,7 @@ class DominoAgent:
 				value = i.get_value()
 		return highest_tile #Return the highest tile
 
+	
 #Domino Generator
 class DominoGenerator:
 
@@ -458,13 +524,14 @@ gameboard.add_player(our_player.name)
 
 
 #Randomized process for testing
-hands = []
-hands.append(domino_shuffler.getRandomHand())
-hands.append(domino_shuffler.getRandomHand())
-hands.append(domino_shuffler.getRandomHand())
-hands.append(domino_shuffler.getRandomHand())
-for k in hands:
-	print_hand(k)
+if game_type == "Random":
+	hands = []
+	hands.append(domino_shuffler.getRandomHand())
+	hands.append(domino_shuffler.getRandomHand())
+	hands.append(domino_shuffler.getRandomHand())
+	hands.append(domino_shuffler.getRandomHand())
+	for k in hands:
+		print_hand(k)
 # our_player.establish_hand(hands[3])
 agent_hand = []
 for k in range(0,7):
@@ -483,8 +550,14 @@ print(gameboard.player_names)
 set_first_player = input("Who Play's First? ")
 
 gameboard.set_starting_player(set_first_player)
-gameboard.next_player()
 
+
+first_domino = input("First Play: ")
+if gameboard.get_current_player() == our_player.name:
+	our_player.current_player
+
+gameboard.first_tile(Domino(first_domino[0], first_domino[2]))
+gameboard.next_player()
 #Game loop
 while not gameboard.finished:
 	#Print who's turn is it
@@ -496,7 +569,7 @@ while not gameboard.finished:
 	#Carlitos makes a move
 	if gameboard.get_current_player() == our_player.name:
 		print("Carlitos makes a move")
-		our_player.random_move()
+		our_player.ai_move()
 	else:
 
 		move = input("Input a move: ")
